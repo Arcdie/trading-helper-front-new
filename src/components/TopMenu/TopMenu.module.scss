@@ -1,0 +1,112 @@
+.TopMenu {
+  height: 40px;
+  display: flex;
+  border-bottom: 1px solid #E0E3EB;
+
+  .Separator {
+    height: 50%;
+    align-self: center;
+  }
+
+  .InstrumentName {
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 15px;
+  }
+
+  .ChartPeriods {
+    display: flex;
+    align-items: center;
+    margin-left: 5px;
+    margin-right: 5px;
+  
+    div {
+      width: 35px;
+      height: 80%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 5px;
+      transition: background-color 60ms ease,opacity 60ms ease,color 60ms ease;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, .1);
+      }
+
+      &.active {
+        color: #2962FF;
+      }
+
+      span {
+        font-size: 15px;
+      }
+    }
+  }
+
+  .ChartDrawing {
+    display: flex;
+    align-items: center;
+    margin-left: 5px;
+    margin-right: 5px;
+
+    div {
+      width: 35px;
+      height: 80%;
+      cursor: pointer;
+      display: flex;
+      border-radius: 5px;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 60ms ease,opacity 60ms ease,color 60ms ease;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, .1);
+      }
+
+      &:first-child {
+        img {
+          height: 95%;
+        }
+      }
+
+      &:last-child {
+        img {
+          height: 80%;
+        }
+      }
+    }
+  }
+
+  .Settings {
+    display: flex;
+    align-items: center;
+    margin-left: 5px;
+    margin-right: 5px;
+
+    div {
+      width: 35px;
+      height: 80%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      &:hover {
+        animation: 2s linear 0s normal none infinite running rotate;
+      } 
+    }
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+

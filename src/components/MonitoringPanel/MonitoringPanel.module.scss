@@ -1,0 +1,89 @@
+.MonitoringPanel {
+  border-left: 1px solid #E0E3EB;
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  overflow-y: scroll;
+  background-color: white;
+
+  .SearchInstruments {
+    height: 40px;
+
+    input[type="text"] {
+      height: 100%;
+      outline: none;
+      border-radius: 0;
+      border-left: none;
+      border-color: #E0E3EB;
+    }
+  }
+
+  .InstrumentsContainer {
+    .Headlines {
+      height: 40px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid #DEE2E6;
+
+      span {
+        cursor: pointer;
+
+        &.InstrumentName {
+          text-align: left;
+          padding-left: 13px;
+        }
+
+        text-align: center;
+      }
+    }
+
+    .InstrumentList {
+      .Instrument {
+        height: 50px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        border-bottom: 1px solid #DEE2E6;
+
+        &:hover {
+          background-color: #F0F3FA;
+        }
+
+        &:last-child {
+          border-bottom: none;
+        }
+
+        .InstrumentName {
+          display: flex;
+          padding-left: 13px;
+
+          img {
+            &:hover {
+              // fill: green;
+            }
+
+            cursor: pointer;
+          }
+
+          span {
+            text-align: left;
+            margin-left: 8px;
+          }
+        }
+
+        span {
+          text-align: center;
+
+          &.red {
+            color: #F23645;
+          }
+
+          &.green {
+            color: #22AB94;
+          }
+        }
+      }
+    }
+  }
+}

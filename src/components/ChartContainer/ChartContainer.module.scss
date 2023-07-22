@@ -1,0 +1,19 @@
+.ChartContainer {
+  position: relative;
+
+  .CandleData {
+    display: flex;
+    position: absolute;
+    padding: 10px 15px;
+    font-size: 13px;
+
+    div {
+      margin-right: 7px;
+
+      span {
+        margin-left: 3px;
+        color: #000FFF;
+      }
+    }
+  }
+}

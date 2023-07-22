@@ -1,0 +1,142 @@
+.TradingPanel {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: white;
+  border-left: 1px solid #E0E3EB;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 2;
+  padding: 15px 0;
+
+  .TradingSides {
+    display: flex;
+
+    div {
+      cursor: pointer;
+      padding: 3px 10px 4px;
+      margin-right: 1px;
+
+      color: #B2B5BE;
+      background-color: #F0F3FA;
+
+      &.active {
+        color: white;
+
+        &.Long {
+          background-color: #1E53E5;
+          // background-color: rgba(61, 255, 43, 0.76);
+        }
+  
+        &.Short {
+          background-color: #CC2F3C;
+          // background-color: rgba(250, 16, 16, 0.76);
+        }
+      }
+
+      &.Long {
+        border-radius: 10px 0 0 10px;
+      }
+
+      &.Short {
+        border-radius: 0 10px 10px 0;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+      }
+
+      p {
+        margin-bottom: 0px;
+        font-size: 13px;
+      }
+
+      span {
+
+      }
+    }
+  }
+
+  .SumTrade {
+    margin-top: 15px;
+
+    input[type="text"] {
+
+    }
+  }
+
+  .Limits {
+    font-size: 14px;
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+
+    .LimitName {
+      display: flex;
+      justify-content: center;
+      padding-left: 0;
+
+      input[type="checkbox"] {
+        margin-right: 6px;
+      }
+    }
+
+    .LimitValues {
+      div {
+        position: relative;
+
+        input[type="text"] {
+          border-radius: 0;
+          border-bottom: none;
+          border-color: #DEE2E6;
+        }
+
+        &:first-child {
+          input[type="text"] {
+            border-radius: 7px 7px 0 0;
+          }
+        }  
+
+        &:last-child {
+          input[type="text"] {
+            border-radius: 0 0 7px 7px;
+            border-bottom: 1px solid #DEE2E6;
+          }
+        }
+      }
+    }
+
+    .TakeProfit {
+      .LimitValues {
+        div {
+          span {
+            color: #6A6D78;
+            position: absolute;
+            top: 7px;
+          }
+        }
+      }
+    }
+
+    .StopLoss {
+      .LimitName {
+        margin-left: 38px;
+      }
+
+      .LimitValues {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+      }
+    }
+
+    .LimitMarkers {
+      display: flex;
+      position: absolute;
+
+      span {
+
+      }
+    }
+  }
+}
