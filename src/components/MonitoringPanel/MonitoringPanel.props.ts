@@ -1,3 +1,6 @@
+import { IInstrument } from '../../interfaces/instrument.interface';
+
 export interface IMonitoringPanelProps {
-  children?: string | JSX.Element;
+  activeInstrument?: IInstrument;
+  setActiveInstrument(instrument: IInstrument): void;
 };

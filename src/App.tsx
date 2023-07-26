@@ -1,23 +1,20 @@
-import React from 'react';
-import styles from './App.scss';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
-import Page from './components/Page/Page';
-import TopMenu from './components/TopMenu/TopMenu';
-import ChartContainer from './components/ChartContainer/ChartContainer';
+import './App.scss';
 
-import TradingPanel from './components/TradingPanel/TradingPanel';
-import MonitoringPanel from './components/MonitoringPanel/MonitoringPanel';
+import AuthPage from './components/Pages/AuthPage/AuthPage';
+import TradingPage from './components/Pages/TradingPage/TradingPage';
+import Code404Page from './components/Pages/HttpErrors/Code404Page';
 
 function App() {
   return (
-    <div className={styles.App}>
-      <Page>
-        <TopMenu/>
-        <TradingPanel/>
-        {/* <MonitoringPanel/> */}
-        <ChartContainer/>
-      </Page>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<TradingPage />} />
+        <Route path="/auth" element={<AuthPage />} />
+        <Route path="*" element={<Code404Page />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

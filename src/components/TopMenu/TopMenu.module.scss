@@ -66,14 +66,20 @@
         background-color: rgba(0, 0, 0, .1);
       }
 
+      &.active {
+        svg {
+          fill: #2962FF;
+        }
+      }
+
       &:first-child {
-        img {
+        svg {
           height: 95%;
         }
       }
 
       &:last-child {
-        img {
+        svg {
           height: 80%;
         }
       }

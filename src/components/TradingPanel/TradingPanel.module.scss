@@ -1,13 +1,8 @@
 .TradingPanel {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background-color: white;
-  border-left: 1px solid #E0E3EB;
+  width: 300px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  z-index: 2;
   padding: 15px 0;
 
   .TradingSides {
