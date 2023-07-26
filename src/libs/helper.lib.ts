@@ -2,6 +2,18 @@ export const join = (...args: (boolean | string)[]) => args.filter(e => e).join(
 
 export class HelperLib {
   // own
+  static saveToLocalStorage<T>(key: string, value: T) {
+    localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+  }
+
+  static removeFromLocalStorage(key: string) {
+    localStorage.removeItem(key);
+  }
+
+  static getFromLocalStorage<T>(key: string): T | null {
+    const result = localStorage.getItem(key);
+    return result ? JSON.parse(result) as T : null;
+  }
 
   // common
   static sleep = (ms: number) => new Promise(resolve => { setTimeout(resolve, ms); })

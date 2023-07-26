@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { ITopMenuProps } from './TopMenu.props';
 import { ECandleType } from '../../interfaces/candle-type.enum';
@@ -25,6 +25,24 @@ const TopMenu = ({
         ? false : currentDrawingTool
     )
   };
+
+  useEffect(() => {
+    const keyPressedHandler = ({ key }: KeyboardEvent) => {
+      let newActivePeriod: ECandleType;
+
+      switch (key) {
+        case 'q': newActivePeriod = ECandleType['5M']; break;
+        case 'w': newActivePeriod = ECandleType['1H']; break;
+        case 'e': newActivePeriod = ECandleType['1D']; break;
+        default: return true;
+      }
+
+      setActivePeriod(prev => newActivePeriod !== prev ? newActivePeriod : prev);
+    };
+
+    window.addEventListener('keydown', keyPressedHandler);
+    return () => document.removeEventListener('keydown', keyPressedHandler);
+  }, []);
 
   return <div className={join(styles.TopMenu, 'col-12')}>
     <div className={join(styles.InstrumentName)}>

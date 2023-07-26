@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 import styles from './TradingPage.module.scss';
 
-import { join } from '../../../libs/helper.lib';
+import { join,  HelperLib } from '../../../libs/helper.lib';
 
 import TopMenu from '../../TopMenu/TopMenu';
 import ChartContainer from '../../ChartContainer/ChartContainer';
@@ -11,6 +11,7 @@ import MonitoringPanel from '../../MonitoringPanel/MonitoringPanel';
 
 import { ECandleType } from '../../../interfaces/candle-type.enum';
 import { IInstrument } from '../../../interfaces/instrument.interface';
+import { ELocalStorageKey } from '../../../interfaces/local-storage-key.enum';
 
 const TradingPage = () => {
   const [activePeriod, setActivePeriod] = useState(ECandleType['1H']);
@@ -21,6 +22,11 @@ const TradingPage = () => {
 
   const setActiveInstrumentWrapper = (instrument: IInstrument) => {
     setActiveInstrument(instrument);
+    HelperLib.saveToLocalStorage(
+      ELocalStorageKey.ACTIVE_INSTRUMENT_ID,
+      instrument.instrument_id,
+    );
+    
     document.title = instrument.name;
   };
 

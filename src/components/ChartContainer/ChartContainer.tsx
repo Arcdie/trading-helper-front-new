@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createChart, AutoscaleInfoProvider, IChartApi, UTCTimestamp } from 'lightweight-charts';
 
 import { MomentLib } from '../../libs/moment.lib';
@@ -52,6 +52,7 @@ const ChartContainer = ({
     maxBottomPriceValue: 0,
   });
 
+  const [chartVersion, setChartVersion] = useState(1);
   const chartContainerHeight = window.innerHeight - 40;
 
   useEffect(() => {
@@ -64,10 +65,20 @@ const ChartContainer = ({
       }
     };
 
+    const keyPressedHandler = ({ key }: KeyboardEvent) => {
+      if (key !== 'r') {
+        return true;
+      }
+
+      setChartVersion(prev => prev + 1);
+    };
+
     window.addEventListener('resize', resizeHandler);
+    window.addEventListener('keydown', keyPressedHandler);
 
     return () => {
       window.removeEventListener('resize', resizeHandler);
+      document.removeEventListener('keydown', keyPressedHandler);
       chartRef.current && chartRef.current.remove();
     };
   }, []);

@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 
-import { join } from '../../libs/helper.lib';
+import { join, HelperLib } from '../../libs/helper.lib';
 
 import { getActiveInstruments } from './MonitoringPanel.api';
 
 import { IMonitoringPanelProps } from './MonitoringPanel.props';
 import { IInstrument } from '../../interfaces/instrument.interface';
+import { ELocalStorageKey } from '../../interfaces/local-storage-key.enum';
 
 import styles from './MonitoringPanel.module.scss';
 import { ReactComponent as StarImage } from './images/star.svg';
@@ -43,6 +44,16 @@ const MonitoringPanel = ({
       if (instruments && instruments.length) {
         setInstrumentList(instruments);
         setShownInstrumentList(instruments);
+
+        const storedActiveInstrumentId = HelperLib
+          .getFromLocalStorage<number>(ELocalStorageKey.ACTIVE_INSTRUMENT_ID);
+
+        if (!storedActiveInstrumentId) {
+          HelperLib.removeFromLocalStorage(ELocalStorageKey.ACTIVE_INSTRUMENT_ID);
+        } else {
+          const targetInstrument = instruments.find(e => e.instrument_id === storedActiveInstrumentId);
+          targetInstrument && setActiveInstrument(targetInstrument);
+        }
       }
     }
 
