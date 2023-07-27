@@ -39,26 +39,31 @@ const transformRawCandleData = (candles: ICandle[]) => {
     .sort((a, b) => a.timeUnix < b.timeUnix ? -1 : 1);
 }
 
+interface IBaseChart {
+  chart: IChartApi;
+  chartData: {
+    minValue: number;
+    maxValue: number;
+    maxTopPriceValue: number;
+    maxBottomPriceValue: number;
+  };
+}
+
 const ChartContainer = ({
   activePeriod,
   activeInstrument,
 }: IChartContainerProps) => {
-  const chartRef = useRef<IChartApi>();
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-  const chartDataRef = useRef({
-    minValue: 0,
-    maxValue: 0,
-    maxTopPriceValue: 0,
-    maxBottomPriceValue: 0,
-  });
+  const baseChartRef = useRef<IBaseChart>();
+  const baseChartContainerRef = useRef(null);
 
-  const [chartVersion, setChartVersion] = useState(1);
+  // const [chartVersion, setChartVersion] = useState(1);
   const chartContainerHeight = window.innerHeight - 40;
 
   useEffect(() => {
     const resizeHandler = () => {
-      if (chartRef.current) {
-        chartRef.current.applyOptions({
+      if (baseChartRef.current) {
+        const { chart } = baseChartRef.current;
+        chart!.applyOptions({
           width: window.innerWidth,
           height: window.innerHeight - 40,
         });
@@ -70,7 +75,7 @@ const ChartContainer = ({
         return true;
       }
 
-      setChartVersion(prev => prev + 1);
+      // setChartVersion(prev => prev + 1);
     };
 
     window.addEventListener('resize', resizeHandler);
@@ -79,47 +84,55 @@ const ChartContainer = ({
     return () => {
       window.removeEventListener('resize', resizeHandler);
       document.removeEventListener('keydown', keyPressedHandler);
-      chartRef.current && chartRef.current.remove();
+      // baseChartRef.current && baseChartRef.current.chart.remove();
     };
   }, []);
 
   useEffect(() => {
-    if (chartRef.current) {
-      chartRef.current.remove();
-    }
+    baseChartRef.current?.chart.remove();
+    const container = baseChartContainerRef.current! as HTMLDivElement;
 
-    chartRef.current = createChart((chartContainerRef.current as HTMLDivElement), {
-      width: chartContainerRef.current?.clientWidth,
-      height: chartContainerHeight,
-      layout: {
-        background: {
-          color: 'white',
+    baseChartRef.current = {
+      chart: createChart(container, {
+        width: container.clientWidth,
+        height: chartContainerHeight,
+        layout: {
+          background: {
+            color: 'white',
+          },
         },
-      },
-
-      crosshair: {
-        mode: 0,
-      },
-
-      timeScale: {
-        rightOffset: 12,
-        secondsVisible: false,
-        timeVisible: [ECandleType['5M'], ECandleType['1H']].includes(activePeriod),
-      },
-
-      handleScale: {
-        axisPressedMouseMove: {
-          time: true,
-          price: false,
+  
+        crosshair: {
+          mode: 0,
         },
+  
+        timeScale: {
+          rightOffset: 12,
+          secondsVisible: false,
+          timeVisible: [ECandleType['5M'], ECandleType['1H']].includes(activePeriod),
+        },
+  
+        handleScale: {
+          axisPressedMouseMove: {
+            time: true,
+            price: false,
+          },
+        },
+  
+        // rightPriceScale: {
+        //   width: 60,
+        // },
+      }),
+
+      chartData: {
+        minValue: 0,
+        maxValue: 0,
+        maxTopPriceValue: 0,
+        maxBottomPriceValue: 0,
       },
-
-      // rightPriceScale: {
-      //   width: 60,
-      // },
-    });
-
-    const mainSeries = chartRef.current.addCandlestickSeries({
+    };
+  
+    const mainSeries = baseChartRef.current.chart.addCandlestickSeries({
       upColor: '#000FFF',
       downColor: 'rgba(0, 0, 0, 0)',
       borderDownColor: '#000FFF',
@@ -133,19 +146,19 @@ const ChartContainer = ({
       autoscaleInfoProvider: (original: AutoscaleInfoProvider) => {
         const res = original(() => null);
 
-        if (res && res.priceRange) {
+        if (res && res.priceRange && baseChartRef.current) {
           // let wereChanges = false;
-          chartDataRef.current.minValue = res.priceRange.minValue;
-          chartDataRef.current.maxValue = res.priceRange.maxValue;
+          baseChartRef.current.chartData.minValue = res.priceRange.minValue;
+          baseChartRef.current.chartData.maxValue = res.priceRange.maxValue;
 
-          if (chartDataRef.current.maxTopPriceValue !== res.priceRange.maxValue) {
+          if (baseChartRef.current.chartData.maxTopPriceValue !== res.priceRange.maxValue) {
             // wereChanges = true;
-            chartDataRef.current.maxTopPriceValue = res.priceRange.maxValue;
+            baseChartRef.current.chartData.maxTopPriceValue = res.priceRange.maxValue;
           }
 
-          if (chartDataRef.current.maxBottomPriceValue !== res.priceRange.minValue) {
+          if (baseChartRef.current.chartData.maxBottomPriceValue !== res.priceRange.minValue) {
             // wereChanges = true;
-            chartDataRef.current.maxBottomPriceValue = res.priceRange.minValue;
+            baseChartRef.current.chartData.maxBottomPriceValue = res.priceRange.minValue;
           }
 
           // if (wereChanges) {
@@ -186,7 +199,7 @@ const ChartContainer = ({
 
     <div className={join(styles.ChartList)}>
       <div
-        ref={chartContainerRef}
+        ref={baseChartContainerRef}
         className={join(styles.BaseChart)}
       ></div>
 

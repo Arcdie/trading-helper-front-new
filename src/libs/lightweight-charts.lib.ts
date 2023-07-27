@@ -1,5 +1,9 @@
+export class BaseChartLib {
+  constructor() {
+    
+  }
+}
 
-
-export class LightweightChartLib {
+export class VolumeChartLib {
 
 }
