@@ -1,3 +1,1 @@
-export interface ITradingPanelProps {
-  children?: string | JSX.Element;
-};
+export interface ITradingPanelProps {};
