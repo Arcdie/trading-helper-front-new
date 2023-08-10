@@ -12,13 +12,13 @@ import { ReactComponent as FigureLineImage } from './images/figure-line.svg';
 import { ReactComponent as FigureLevelImage } from './images/figure-level.svg';
 
 const TopMenu = ({
-  activeInstrument,
   activePeriod,
+  activeInstrument,
+  activeDrawingTool,
 
   setActivePeriod,
+  setActiveDrawingTool,
 }: ITopMenuProps) => {
-  const [activeDrawingTool, setActiveDrawingTool] = useState<EDrawingTool | false>(false);
-
   const toggleActiveDrawingTool = (currentDrawingTool: EDrawingTool) => {
     setActiveDrawingTool(
       activeDrawingTool === currentDrawingTool

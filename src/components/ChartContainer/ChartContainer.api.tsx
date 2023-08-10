@@ -7,15 +7,9 @@ import { ICandle } from '../../interfaces/candle.interface';
 
 const URL_GET_CANDLES = HOST_URL + '/api/candles';
 
-export const getCandles = (
-  instrumentId: number,
+export const getCandles = (data: {
   period: ECandleType,
-  startTime?: Date,
-  endTime?: Date,
-) =>
-  makeGetRequest<ICandle[]>(URL_GET_CANDLES, {
-    period,
-    instrumentId,
-    startTime,
-    endTime,
-  });
+  instrumentId: number,
+  startTime?: string,
+  endTime?: string,
+}) => makeGetRequest<ICandle[]>(URL_GET_CANDLES, data);

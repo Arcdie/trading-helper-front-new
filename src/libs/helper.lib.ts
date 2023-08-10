@@ -2,6 +2,10 @@ export const join = (...args: (boolean | string)[]) => args.filter(e => e).join(
 
 export class HelperLib {
   // own
+  static async getCurrentState<T>(executor: (value: React.SetStateAction<T>) => void): Promise<T> {
+    return new Promise(res => executor((prev: T) => { res(prev); return prev; }));
+  }
+
   static saveToLocalStorage<T>(key: string, value: T) {
     localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
   }

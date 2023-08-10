@@ -2,22 +2,24 @@ import { useState, useEffect } from 'react';
 
 import styles from './TradingPage.module.scss';
 
-import { join,  HelperLib } from '../../../libs/helper.lib';
+import { join,  HelperLib } from '../../libs/helper.lib';
 
-import TopMenu from '../../TopMenu/TopMenu';
-import ChartContainer from '../../ChartContainer/ChartContainer';
-import TradingPanel from '../../TradingPanel/TradingPanel';
-import MonitoringPanel from '../../MonitoringPanel/MonitoringPanel';
+import TopMenu from '../../components/TopMenu/TopMenu';
+import ChartContainer from '../../components/ChartContainer/ChartContainer';
+import TradingPanel from '../../components/TradingPanel/TradingPanel';
+import MonitoringPanel from '../../components/MonitoringPanel/MonitoringPanel';
 
-import { ECandleType } from '../../../interfaces/candle-type.enum';
-import { IInstrument } from '../../../interfaces/instrument.interface';
-import { ELocalStorageKey } from '../../../interfaces/local-storage-key.enum';
+import { ECandleType } from '../../interfaces/candle-type.enum';
+import { IInstrument } from '../../interfaces/instrument.interface';
+import { EDrawingTool } from '../../interfaces/drawing-tool.enum';
+import { ELocalStorageKey } from '../../interfaces/local-storage-key.enum';
 
 const TradingPage = () => {
   const [activePeriod, setActivePeriod] = useState(ECandleType['1H']);
   const [activeInstrument, setActiveInstrument] = useState<IInstrument>();
   const [isActiveTradingPanel, setIsActiveTradingPanel] = useState(false);
   const [isActiveMonitoringPanel, setIsActiveMonitoringPanel] = useState(true);
+  const [activeDrawingTool, setActiveDrawingTool] = useState<EDrawingTool | false>(false);
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
 
   const setActiveInstrumentWrapper = (instrument: IInstrument) => {
@@ -77,14 +79,22 @@ const TradingPage = () => {
       <TopMenu
         activePeriod={activePeriod}
         activeInstrument={activeInstrument}
+        activeDrawingTool={activeDrawingTool}
 
         setActivePeriod={setActivePeriod}
+        setActiveDrawingTool={setActiveDrawingTool}
       />
 
       { activeInstrument &&
         <ChartContainer
           activePeriod={activePeriod}
           activeInstrument={activeInstrument}
+
+          getActivePeriod={() => HelperLib.getCurrentState(setActivePeriod)}
+          getActiveInstrument={() => HelperLib.getCurrentState(setActiveInstrument)}
+          getActiveDrawingTool={() => HelperLib.getCurrentState(setActiveDrawingTool)}
+
+          setActiveDrawingTool={setActiveDrawingTool}
         />
       }
 
