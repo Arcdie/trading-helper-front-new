@@ -1,24 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 
-import { ITopMenuProps } from './TopMenu.props';
+import { useActions,  useAppSelector } from '../../hooks/redux';
+
 import { ECandleType } from '../../interfaces/candle-type.enum';
 import { EDrawingTool } from '../../interfaces/drawing-tool.enum';
 
-import styles from './TopMenu.module.scss';
 import { join } from '../../libs/helper.lib';
 
 import { ReactComponent as SettingsImage } from './images/settings.svg';
 import { ReactComponent as FigureLineImage } from './images/figure-line.svg';
 import { ReactComponent as FigureLevelImage } from './images/figure-level.svg';
 
-const TopMenu = ({
-  activePeriod,
-  activeInstrument,
-  activeDrawingTool,
+import styles from './TopMenu.module.scss';
 
-  setActivePeriod,
-  setActiveDrawingTool,
-}: ITopMenuProps) => {
+const TopMenu = () => {
+  const { setActivePeriod, setActiveDrawingTool } = useActions();
+  const activePeriod = useAppSelector(state => state.tradingPage.activePeriod);
+  const activeInstrument = useAppSelector(state => state.tradingPage.activeInstrument);
+  const activeDrawingTool = useAppSelector(state => state.tradingPage.activeDrawingTool);
+
   const toggleActiveDrawingTool = (currentDrawingTool: EDrawingTool) => {
     setActiveDrawingTool(
       activeDrawingTool === currentDrawingTool
@@ -37,7 +37,7 @@ const TopMenu = ({
         default: return true;
       }
 
-      setActivePeriod(prev => newActivePeriod !== prev ? newActivePeriod : prev);
+      setActivePeriod(newActivePeriod);
     };
 
     window.addEventListener('keydown', keyPressedHandler);

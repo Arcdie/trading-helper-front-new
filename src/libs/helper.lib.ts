@@ -1,3 +1,5 @@
+import { v4 } from 'uuid';
+
 export const join = (...args: (boolean | string)[]) => args.filter(e => e).join(' ');
 
 export class HelperLib {
@@ -20,6 +22,8 @@ export class HelperLib {
   }
 
   // common
+  static generateUniqueId = () => v4();
+  
   static sleep = (ms: number) => new Promise(resolve => { setTimeout(resolve, ms); })
 
   static isDefined = <T>(argument: T | null | undefined): argument is T => argument !== null && argument !== undefined;

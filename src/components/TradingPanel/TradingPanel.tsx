@@ -1,9 +1,8 @@
-import { ITradingPanelProps } from './TradingPanel.props';
-
-import styles from './TradingPanel.module.scss';
 import { join } from '../../libs/helper.lib';
 
-const TradingPanel = ({}: ITradingPanelProps) => {
+import styles from './TradingPanel.module.scss';
+
+const TradingPanel = () => {
   return <div className={join(styles.TradingPanel )}>
     <div className={join(styles.TradingSides, 'col-10')}>
       <div className={join(styles.Long, 'col-6')}>

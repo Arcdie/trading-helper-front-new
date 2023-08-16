@@ -1,0 +1,25 @@
+.CalculatorPage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .CalculatorContainer {
+    border: 1px solid #C1C1C1;
+    padding: 30px;
+    box-sizing: border-box;
+    border-radius: 20px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+
+    .Divider {
+      height: 150px;
+      text-align: center;
+
+      div {
+        height: 100%;
+        background-color: #999999;
+      }
+    }
+  }
+}

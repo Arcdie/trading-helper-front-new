@@ -1,30 +1,51 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+
+import { useActions, useAppSelector } from '../../hooks/redux';
 
 import { join, HelperLib } from '../../libs/helper.lib';
 
-import { getActiveInstruments } from './MonitoringPanel.api';
+import {
+  addFavoriteInstrument,
+  removeFavoriteInstrument,
+} from '../../pages/TradingPage/TradingPage.api';
 
-import { IMonitoringPanelProps } from './MonitoringPanel.props';
 import { IInstrument } from '../../interfaces/instrument.interface';
 import { ELocalStorageKey } from '../../interfaces/local-storage-key.enum';
 
 import styles from './MonitoringPanel.module.scss';
 import { ReactComponent as StarImage } from './images/star.svg';
 
-const MonitoringPanel = ({
-  activeInstrument,
-  setActiveInstrument,
-}: IMonitoringPanelProps) => {
-  const [instrumentList, setInstrumentList] = useState<IInstrument[]>([]);
-  const [shownInstrumentList, setShownInstrumentList] = useState<IInstrument[]>([]);
-  const [favoriteInstrumentList, setFavoriteInstrumentList] = useState<string[]>([]);
+const MonitoringPanel = () => {
+  const {
+    setActiveInstrument,
+    addFavoriteInstrumentToList,
+    removeFavoriteInstrumentFromList,
+  } = useActions();
 
-  const updateFavoriteInstrumentList = (favoriteInstrument: string) => {
-    setFavoriteInstrumentList(
-      favoriteInstrumentList.includes(favoriteInstrument)
-        ? favoriteInstrumentList.filter(e => e !== favoriteInstrument)
-        : [...favoriteInstrumentList, favoriteInstrument],
-    );
+  const {
+    instrumentList,
+    activeInstrument,
+    favoriteInstrumentList,
+  } = useAppSelector(state => state.tradingPage);
+
+  const [shownInstrumentList, setShownInstrumentList] = useState<IInstrument[]>(instrumentList);
+  
+  const updateFavoriteInstrumentList = async (instrument: IInstrument) => {
+    const doesExist = favoriteInstrumentList.some(e => e.instrument_id === instrument.instrument_id);
+
+    if (doesExist) {
+      const resultRemove = await removeFavoriteInstrument({
+        instrumentId: instrument.instrument_id,
+      });
+  
+      resultRemove && removeFavoriteInstrumentFromList(instrument);
+    } else {
+      const resultAdd = await addFavoriteInstrument({
+        instrumentId: instrument.instrument_id,
+      });
+  
+      resultAdd && addFavoriteInstrumentToList(resultAdd);
+    }
   };
 
   const filterShownInstrumentList = (searchingInstrumentValue: string) => {
@@ -37,28 +58,14 @@ const MonitoringPanel = ({
     );
   };
 
-  useEffect(() => {
-    const setData = async () => {
-      const instruments = await getActiveInstruments();
-     
-      if (instruments && instruments.length) {
-        setInstrumentList(instruments);
-        setShownInstrumentList(instruments);
+  const setActiveInstrumentWrapper = (instrument: IInstrument) => {
+    setActiveInstrument(instrument);
 
-        const storedActiveInstrumentId = HelperLib
-          .getFromLocalStorage<number>(ELocalStorageKey.ACTIVE_INSTRUMENT_ID);
-
-        if (!storedActiveInstrumentId) {
-          HelperLib.removeFromLocalStorage(ELocalStorageKey.ACTIVE_INSTRUMENT_ID);
-        } else {
-          const targetInstrument = instruments.find(e => e.instrument_id === storedActiveInstrumentId);
-          targetInstrument && setActiveInstrument(targetInstrument);
-        }
-      }
-    }
-
-    setData();
-  }, []);
+    HelperLib.saveToLocalStorage(
+      ELocalStorageKey.ACTIVE_INSTRUMENT_ID,
+      instrument.instrument_id,
+    );
+  };
 
   return <div className={join(styles.MonitoringPanel)}>
     <div className={join(styles.SearchInstruments)}>
@@ -66,9 +73,7 @@ const MonitoringPanel = ({
         type='text'
         placeholder='Поиск'
         className={join('form-control')}
-        onChange={(e) => {
-          filterShownInstrumentList(e.target.value);
-        }}
+        onChange={(e) => filterShownInstrumentList(e.target.value)}
       />
     </div>
 
@@ -81,19 +86,22 @@ const MonitoringPanel = ({
       </div>
 
       <div className={join(styles.InstrumentList)}>
-        { shownInstrumentList.map(instrument => <div
+        { shownInstrumentList
+          .slice()
+          .sort((a, b) => favoriteInstrumentList.some(e => b.instrument_id === e.instrument_id) ? 1 : -1)
+          .map(instrument => <div
               key={instrument.instrument_id}
-              onClick={() => setActiveInstrument(instrument)}
+              onClick={() => setActiveInstrumentWrapper(instrument)}
               className={join(
                 styles.Instrument,
-                favoriteInstrumentList.includes(instrument.name) && styles.favorite,
+                favoriteInstrumentList.some(e => e.instrument_id === instrument.instrument_id) && styles.favorite,
                 activeInstrument?.name === instrument.name && styles.active,
               )}
             >
               <div className={join(styles.InstrumentName, 'col-5')}>
                 <StarImage
                   className={join('col-1')}
-                  onClick={() => updateFavoriteInstrumentList(instrument.name)}
+                  onClick={() => updateFavoriteInstrumentList(instrument)}
                 />
                 <span>{instrument.name}</span>
               </div>

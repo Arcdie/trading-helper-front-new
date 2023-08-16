@@ -7,6 +7,7 @@ import { store } from './store';
 import AuthPage from './pages/AuthPage/AuthPage';
 import TradingPage from './pages/TradingPage/TradingPage';
 import Code404Page from './pages/HttpErrors/Code404Page';
+import CalculatorPage from './pages/CalculatorPage/CalculatorPage';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
       <Routes>
         <Route path="/" element={<TradingPage />} />
         <Route path="/auth" element={<AuthPage />} />
+        <Route path="/calculator" element={<CalculatorPage />} />
         <Route path="*" element={<Code404Page />} />
       </Routes>
     </BrowserRouter>

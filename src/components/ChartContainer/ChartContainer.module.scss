@@ -27,5 +27,32 @@
       position: absolute;
       z-index: 2;
     }
+
+    .AddNotification {
+      width: 21px;
+      height: 20px;
+      position: absolute;
+      border: 1px solid black;
+      border-right: none;
+      z-index: 3;
+      box-sizing: border-box;
+      cursor: pointer;
+
+      &:hover {
+        background-color: black;
+
+        span {
+          color: white;
+        }
+      }
+
+      span {
+        font-size: 18px;
+        color: #0fa100;
+        position: relative;
+        bottom: 5px;
+        left: 4px;
+      }
+    }
   }
 }

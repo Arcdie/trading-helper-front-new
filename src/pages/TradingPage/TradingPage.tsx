@@ -1,36 +1,32 @@
 import { useState, useEffect } from 'react';
 
-import styles from './TradingPage.module.scss';
+import { useActions, useAppSelector } from '../../hooks/redux';
 
-import { join,  HelperLib } from '../../libs/helper.lib';
+import { join, HelperLib } from '../../libs/helper.lib';
+
+import { getActiveInstruments, getFavoriteInstruments } from './TradingPage.api';
 
 import TopMenu from '../../components/TopMenu/TopMenu';
 import ChartContainer from '../../components/ChartContainer/ChartContainer';
 import TradingPanel from '../../components/TradingPanel/TradingPanel';
 import MonitoringPanel from '../../components/MonitoringPanel/MonitoringPanel';
 
-import { ECandleType } from '../../interfaces/candle-type.enum';
-import { IInstrument } from '../../interfaces/instrument.interface';
-import { EDrawingTool } from '../../interfaces/drawing-tool.enum';
 import { ELocalStorageKey } from '../../interfaces/local-storage-key.enum';
 
-const TradingPage = () => {
-  const [activePeriod, setActivePeriod] = useState(ECandleType['1H']);
-  const [activeInstrument, setActiveInstrument] = useState<IInstrument>();
-  const [isActiveTradingPanel, setIsActiveTradingPanel] = useState(false);
-  const [isActiveMonitoringPanel, setIsActiveMonitoringPanel] = useState(true);
-  const [activeDrawingTool, setActiveDrawingTool] = useState<EDrawingTool | false>(false);
-  const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+import styles from './TradingPage.module.scss';
 
-  const setActiveInstrumentWrapper = (instrument: IInstrument) => {
-    setActiveInstrument(instrument);
-    HelperLib.saveToLocalStorage(
-      ELocalStorageKey.ACTIVE_INSTRUMENT_ID,
-      instrument.instrument_id,
-    );
-    
-    document.title = instrument.name;
-  };
+const TradingPage = () => {
+  const {
+    setActiveInstrument,
+    setInstrumentList,
+    setFavoriteInstrumentList,
+  } = useActions();
+
+  const activeInstrument = useAppSelector(state => state.tradingPage.activeInstrument);
+
+  const [isActiveTradingPanel, setIsActiveTradingPanel] = useState(false);
+  const [isActiveMonitoringPanel, setIsActiveMonitoringPanel] = useState(Boolean(activeInstrument));
+  const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
 
   useEffect(() => {
     const resizeHandler = () => {
@@ -74,40 +70,44 @@ const TradingPage = () => {
     }
   }, []);
 
+  useEffect(() => {
+    const setData = async () => {
+      const instruments = await getActiveInstruments();
+      const favoriteInstruments = await getFavoriteInstruments();
+     
+      if (instruments && instruments.length) {
+        setInstrumentList(instruments);
+
+        const storedActiveInstrumentId = HelperLib
+          .getFromLocalStorage<number>(ELocalStorageKey.ACTIVE_INSTRUMENT_ID);
+
+        if (!storedActiveInstrumentId) {
+          HelperLib.removeFromLocalStorage(ELocalStorageKey.ACTIVE_INSTRUMENT_ID);
+        } else {
+          const targetInstrument = instruments.find(e => e.instrument_id === storedActiveInstrumentId);
+          targetInstrument && setActiveInstrument(targetInstrument);
+        }
+      }
+
+      if (favoriteInstruments && favoriteInstruments.length) {
+        setFavoriteInstrumentList(favoriteInstruments);
+      }
+    }
+
+    setData();
+  }, []);
+
   return (
     <div className={styles.TradingPage}>
-      <TopMenu
-        activePeriod={activePeriod}
-        activeInstrument={activeInstrument}
-        activeDrawingTool={activeDrawingTool}
-
-        setActivePeriod={setActivePeriod}
-        setActiveDrawingTool={setActiveDrawingTool}
-      />
-
-      { activeInstrument &&
-        <ChartContainer
-          activePeriod={activePeriod}
-          activeInstrument={activeInstrument}
-
-          getActivePeriod={() => HelperLib.getCurrentState(setActivePeriod)}
-          getActiveInstrument={() => HelperLib.getCurrentState(setActiveInstrument)}
-          getActiveDrawingTool={() => HelperLib.getCurrentState(setActiveDrawingTool)}
-
-          setActiveDrawingTool={setActiveDrawingTool}
-        />
-      }
+      <TopMenu/>
+      { activeInstrument && <ChartContainer/> }
 
       <div
         style={{ height: windowSize.height }}
         className={join(styles.RightMenu)}
       >
         { isActiveTradingPanel && <TradingPanel/> }
-        { isActiveMonitoringPanel &&
-          <MonitoringPanel
-            activeInstrument={activeInstrument}
-            setActiveInstrument={setActiveInstrumentWrapper}
-          /> }
+        { isActiveMonitoringPanel && <MonitoringPanel/> }
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import {
   UTCTimestamp,
   ChartOptions,
   LogicalRange,
+  AutoscaleInfo,
   CandlestickData,
   MouseEventParams,
   LineStyleOptions,
@@ -43,7 +44,10 @@ export class BaseChartLib {
 
   private chart?: IChartApi;
   private mainSeries?: ISeriesApi<'Candlestick'>;
-  private extraSeries: ISeriesApi<'Line'>[] = [];
+  private extraSeries: {
+    seriesId: string;
+    series: ISeriesApi<'Line'>;
+  }[] = [];
 
   private minValue: number = 0;
   private maxValue: number = 0;
@@ -169,13 +173,40 @@ export class BaseChartLib {
         minMove: this.instrument.tick_size,
         precision: BaseChartLib.getPrecision(this.instrument.price),
       },
+
+      autoscaleInfoProvider: (original: () => AutoscaleInfo) => {
+        const res = original();
+
+        if (res && res.priceRange) {
+          let isChanged = false;
+
+          this.minValue = res.priceRange.minValue;
+          this.maxValue = res.priceRange.maxValue;
+
+          if (this.maxTopPriceValue !== res.priceRange.maxValue) {
+            isChanged = true;
+            this.maxTopPriceValue = res.priceRange.maxValue;
+          }
+
+          if (this.maxBottomPriceValue !== res.priceRange.minValue) {
+            isChanged = true;
+            this.maxBottomPriceValue = res.priceRange.minValue;
+          }
+
+          if (isChanged) {
+            this.changePriceRangeForExtraSeries();
+          }
+        }
+
+        return res;
+      },
     });
   }
 
-  getColorForFigureLevel() {
+  getColorForFigureLevel(period: ECandleType) {
     let color = EColor.DARK_BLUE_COLOR;
 
-    switch (this.period) {
+    switch (period) {
       case ECandleType['5M']: color = EColor.DARK_BLUE_COLOR; break;
       case ECandleType['1H']: color = EColor.BLUE_COLOR; break;
       case ECandleType['1D']: color = EColor.GREEN_COLOR; break;
@@ -185,40 +216,50 @@ export class BaseChartLib {
     return color;
   }
 
-  addFigureLevel(params: MouseEventParams) {
-    if (!this.chart || !this.mainSeries || !params.point || !params.time) {
+  addFigureLevel(price: number, startedAt: Date) {
+    if (!this.chart || !this.mainSeries) {
       return false;
     }
 
+    const startedAtUnix = HelperLib.getUnix(startedAt);
     const lastCandle = this.candles.at(-1);
-    const targetCandle = this.period !== ECandleType['1D']
-      ? this.candles.find(c => c.timeUnix === params.time)
+    const targetCandle = (this.period !== ECandleType['1D']
+      ? this.candles.find(c => c.timeUnix === startedAtUnix)
       : (() => {
-        const paramDate = new Date(params.time as string).getTime();
+        const paramDate = new Date(startedAt).getTime();
         return this.candles.find(c => new Date(c.timeDate).getTime() === paramDate);
-      })()
+      })()) || this.candles[0];
 
-    const price = this.mainSeries.coordinateToPrice(params.point.y);
-
-    if (!targetCandle || !lastCandle || !price) {
+    if (!targetCandle || !lastCandle) {
       return false;
     }
-  
-    const newExtraSeries = this.addExtraSeries({
-      color: this.getColorForFigureLevel(),
-    });
 
-    newExtraSeries && this.drawInExtraSeries(
-      newExtraSeries,
-      [targetCandle, lastCandle].map(candle => ({
-        price,
-        timeUnix: candle.timeUnix,
-        timeDate: candle.timeDate,
-      }))
-    );
+    return {
+      price,
+      startedAt: targetCandle.timeDate,
+      draw: (period: ECandleType, seriesId: string) => {
+        const newExtraSeries = this.addExtraSeries({
+          color: this.getColorForFigureLevel(period),
+        }, seriesId);
+    
+        newExtraSeries && this.drawInExtraSeries(
+          newExtraSeries,
+          [targetCandle, lastCandle].map(candle => ({
+            price,
+            timeUnix: candle.timeUnix,
+            timeDate: candle.timeDate,
+          }))
+        );
+
+        this.changePriceRangeForExtraSeries();
+      },
+    };
   }
 
-  addExtraSeries(options: DeepPartial<LineStyleOptions & SeriesOptionsCommon> = {}) {
+  addExtraSeries(
+    options: DeepPartial<LineStyleOptions & SeriesOptionsCommon> = {},
+    seriesId: string = HelperLib.generateUniqueId(),
+  ) {
     if (!this.chart) {
       return false;
     }
@@ -226,7 +267,7 @@ export class BaseChartLib {
     const newExtraSeries = this.chart.addLineSeries({
       priceLineSource: 0,
       priceLineVisible: false,
-      lastValueVisible: true,
+      lastValueVisible: false,
       lineWidth: 1,
 
       priceFormat: {
@@ -237,8 +278,21 @@ export class BaseChartLib {
       ...options,
     });
 
-    this.extraSeries.push(newExtraSeries);
+    this.extraSeries.push({
+      seriesId,
+      series: newExtraSeries,
+    });
+
     return newExtraSeries;
+  }
+
+  removeExtraSeries(seriesId: string) {
+    const targetSeries = this.extraSeries.find(s => s.seriesId === seriesId);
+    
+    if (this.chart && targetSeries) {
+      this.chart.removeSeries(targetSeries.series);
+      this.extraSeries = this.extraSeries.filter(s => s.seriesId !== seriesId);
+    }
   }
 
   drawInMainSeries(isUpdate = false) {
@@ -266,6 +320,19 @@ export class BaseChartLib {
 
   calculateHeight(containerHeight: number) {
     return containerHeight * (baseChartSettings.heightPercent / 100);
+  }
+
+  private changePriceRangeForExtraSeries() {
+    this.extraSeries.forEach(series => {
+      series.series.applyOptions({
+        autoscaleInfoProvider: () => ({
+          priceRange: {
+            minValue: this.minValue,
+            maxValue: this.maxValue,
+          },
+        }),
+      });
+    });
   }
 
   static getPrecision(price: number) {
