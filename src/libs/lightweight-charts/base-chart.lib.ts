@@ -15,6 +15,7 @@ import {
 
 import { HelperLib } from '../helper.lib';
 import { MomentLib } from '../moment.lib';
+import { AvailablePeriod, MovingAverageLib } from './moving-average.lib';
 
 import { EColor } from '../../interfaces/color.enum';
 import { ICandle } from '../../interfaces/candle.interface';
@@ -67,6 +68,10 @@ export class BaseChartLib {
     this.candles.unshift(
       ...BaseChartLib.transformRawCandleData(candles),
     );
+  }
+
+  getMovingAverageInstance(period: AvailablePeriod) {
+    return new MovingAverageLib(this.chart!, period);
   }
 
   getStartTimeOfChart() {
@@ -237,10 +242,8 @@ export class BaseChartLib {
     return {
       price,
       startedAt: targetCandle.timeDate,
-      draw: (period: ECandleType, seriesId: string) => {
-        const newExtraSeries = this.addExtraSeries({
-          color: this.getColorForFigureLevel(period),
-        }, seriesId);
+      draw: (color: string, seriesId: string) => {
+        const newExtraSeries = this.addExtraSeries({ color }, seriesId);
     
         newExtraSeries && this.drawInExtraSeries(
           newExtraSeries,
@@ -254,6 +257,10 @@ export class BaseChartLib {
         this.changePriceRangeForExtraSeries();
       },
     };
+  }
+
+  addNotification(price: number, startedAt: Date) {
+    return this.addFigureLevel(price, startedAt);
   }
 
   addExtraSeries(

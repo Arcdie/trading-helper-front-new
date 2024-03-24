@@ -86,6 +86,38 @@
     }
   }
 
+  .Tools {
+    display: flex;
+    align-items: center;
+    margin-left: 10px;
+    margin-right: 10px;
+
+    div {
+      cursor: pointer;
+      border: 1px solid black;
+      box-sizing: border-box;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 15px;
+      padding: 10px;
+
+      &:hover, &.active {
+        border-color: #2962FF;
+
+        span {
+          color: #2962FF;
+        }
+      }
+
+      span {
+        font-size: 13px;
+      }
+    }
+  }
+
   .Settings {
     display: flex;
     align-items: center;

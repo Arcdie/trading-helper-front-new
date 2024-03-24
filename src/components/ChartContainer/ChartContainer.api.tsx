@@ -13,7 +13,6 @@ const URL_GET_FIGURE_LEVELS = HOST_URL + '/api/figure-levels';
 const URL_ADD_FIGURE_LEVEL = URL_GET_FIGURE_LEVELS;
 const URL_REMOVE_FIGURE_LEVEL = URL_GET_FIGURE_LEVELS;
 const URL_GET_NOTIFICATIONS = HOST_URL + '/api/notifications';
-const URL_ADD_NOTIFICATION = URL_GET_NOTIFICATIONS;
 const URL_REMOVE_NOTIFICATION = URL_GET_NOTIFICATIONS;
 
 const {
@@ -48,13 +47,6 @@ export const removeFigureLevel = (data: { figureLevelId: number; }) =>
 // Notifications
 export const getNotifications = (data: { instrumentId: number; }) =>
   makeGetRequest<INotification[]>(URL_GET_NOTIFICATIONS, data, getHeadersWithAuthorizationToken());
-
-export const addNotification = (data: {
-  instrumentId: number;
-  price: number;
-  isLong: boolean;
-}) =>
-  makePostRequest<INotification>(URL_ADD_NOTIFICATION, data, getHeadersWithAuthorizationToken());
 
 export const removeNotification = (data: { notificationId: number; }) =>
   makeDeleteRequest<boolean>(`${URL_REMOVE_NOTIFICATION}/${data.notificationId}`, {}, getHeadersWithAuthorizationToken());

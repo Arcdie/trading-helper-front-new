@@ -14,7 +14,7 @@ function App() {
     <Provider store={store}>
       <BrowserRouter>
       <Routes>
-        <Route path="/" element={<TradingPage />} />
+        <Route path="/" element={<CalculatorPage />} />
         <Route path="/auth" element={<AuthPage />} />
         <Route path="/calculator" element={<CalculatorPage />} />
         <Route path="*" element={<Code404Page />} />

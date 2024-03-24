@@ -4,6 +4,7 @@ import { useActions,  useAppSelector } from '../../hooks/redux';
 
 import { ECandleType } from '../../interfaces/candle-type.enum';
 import { EDrawingTool } from '../../interfaces/drawing-tool.enum';
+import { EServiceTool } from '../../interfaces/service-tool.enum';
 
 import { join } from '../../libs/helper.lib';
 
@@ -14,15 +15,30 @@ import { ReactComponent as FigureLevelImage } from './images/figure-level.svg';
 import styles from './TopMenu.module.scss';
 
 const TopMenu = () => {
-  const { setActivePeriod, setActiveDrawingTool } = useActions();
-  const activePeriod = useAppSelector(state => state.tradingPage.activePeriod);
-  const activeInstrument = useAppSelector(state => state.tradingPage.activeInstrument);
-  const activeDrawingTool = useAppSelector(state => state.tradingPage.activeDrawingTool);
+  const {
+    setActivePeriod,
+    setActiveDrawingTool,
+    setActiveServiceTool,
+  } = useActions();
+
+  const {
+    activePeriod,
+    activeInstrument,
+    activeDrawingTool,
+    activeServiceTool,
+  } = useAppSelector(state => state.tradingPage);
 
   const toggleActiveDrawingTool = (currentDrawingTool: EDrawingTool) => {
     setActiveDrawingTool(
       activeDrawingTool === currentDrawingTool
         ? false : currentDrawingTool
+    )
+  };
+
+  const toggleActiveServiceTool = (currentServiceTool: EServiceTool) => {
+    setActiveServiceTool(
+      activeServiceTool === currentServiceTool
+        ? false : currentServiceTool
     )
   };
 
@@ -73,6 +89,18 @@ const TopMenu = () => {
         onClick={() => toggleActiveDrawingTool(EDrawingTool.TradingLine)}
         className={join(activeDrawingTool && activeDrawingTool === EDrawingTool.TradingLine && styles.active)}
       ><FigureLineImage /></div>
+    </div>
+
+    <div className={join(styles.Separator, 'vr')}></div>
+
+    <div className={join(styles.Tools)}>
+      <div
+        title='Добавить оповещение'
+        className={join(activeServiceTool && activeServiceTool === EServiceTool.Notification && styles.active)}
+        onClick={() => toggleActiveServiceTool(EServiceTool.Notification)}
+      >
+        <span>N</span>
+      </div>
     </div>
 
     <div className={join(styles.Separator, 'vr')}></div>

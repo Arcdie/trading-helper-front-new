@@ -1,6 +1,7 @@
 import { PayloadAction, createSlice, } from '@reduxjs/toolkit'
 
 import { ECandleType } from '../../interfaces/candle-type.enum';
+import { EServiceTool } from '../../interfaces/service-tool.enum';
 import { EDrawingTool } from '../../interfaces/drawing-tool.enum';
 import { IInstrument } from '../../interfaces/instrument.interface';
 import { IFigureLevel } from '../../interfaces/figure-level.interface';
@@ -11,6 +12,7 @@ export interface TradingPageState {
   activePeriod: ECandleType;
   activeInstrument?: IInstrument;
   activeDrawingTool: EDrawingTool | false;
+  activeServiceTool: EServiceTool | false;
 
   instrumentList: IInstrument[];
   figureLevelList: IFigureLevel[];
@@ -20,6 +22,7 @@ export interface TradingPageState {
 
 const initialState: TradingPageState = {
   activeDrawingTool: false,
+  activeServiceTool: false,
   activePeriod: ECandleType['1H'],
 
   instrumentList: [],
@@ -88,6 +91,10 @@ export const tradingPageSlice = createSlice({
 
     setActiveDrawingTool: (state, action: PayloadAction<EDrawingTool | false>) => {
       state.activeDrawingTool = action.payload;
+    },
+
+    setActiveServiceTool: (state, action: PayloadAction<EServiceTool | false>) => {
+      state.activeServiceTool = action.payload;
     },
 
     setInstrumentList: (state, action: PayloadAction<IInstrument[]>) => {

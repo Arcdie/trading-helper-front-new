@@ -86,30 +86,37 @@ const MonitoringPanel = () => {
       </div>
 
       <div className={join(styles.InstrumentList)}>
-        { shownInstrumentList
-          .slice()
-          .sort((a, b) => favoriteInstrumentList.some(e => b.instrument_id === e.instrument_id) ? 1 : -1)
-          .map(instrument => <div
-              key={instrument.instrument_id}
-              onClick={() => setActiveInstrumentWrapper(instrument)}
-              className={join(
-                styles.Instrument,
-                favoriteInstrumentList.some(e => e.instrument_id === instrument.instrument_id) && styles.favorite,
-                activeInstrument?.name === instrument.name && styles.active,
-              )}
-            >
-              <div className={join(styles.InstrumentName, 'col-5')}>
-                <StarImage
-                  className={join('col-1')}
-                  onClick={() => updateFavoriteInstrumentList(instrument)}
-                />
-                <span>{instrument.name}</span>
-              </div>
-              <span className={join('col-2')}>0%</span>
-              <span className={join('col-2')}>0%</span>
-              <span className={join('col-2')}>0%</span>
-            </div>)
-        }
+        { (() => {
+            const favoriteInstruments = instrumentList
+              .filter(sE => favoriteInstrumentList.some(fE => sE.instrument_id === fE.instrument_id))
+
+            return [
+              ...favoriteInstruments,
+              ...(instrumentList
+                .slice()
+                // .filter(sE => !favoriteInstrumentIds.includes(sE)) // todo: fix
+                .sort((a, b) => a.name[0] > b.name[0] ? 1 : -1)),
+            ].filter(e => e);
+          })().map(instrument => <div
+          key={instrument.instrument_id}
+          onClick={() => setActiveInstrumentWrapper(instrument)}
+          className={join(
+            styles.Instrument,
+            favoriteInstrumentList.some(e => e.instrument_id === instrument.instrument_id) && styles.favorite,
+            activeInstrument?.name === instrument.name && styles.active,
+          )}
+        >
+          <div className={join(styles.InstrumentName, 'col-5')}>
+            <StarImage
+              className={join('col-1')}
+              onClick={() => updateFavoriteInstrumentList(instrument)}
+            />
+            <span>{instrument.name}</span>
+          </div>
+          <span className={join('col-2')}>0%</span>
+          <span className={join('col-2')}>0%</span>
+          <span className={join('col-2')}>0%</span>
+        </div>) }
       </div>
     </div>
   </div>;

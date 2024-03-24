@@ -10,24 +10,29 @@ import { VolumeChartLib } from '../../libs/lightweight-charts/volume-chart.lib';
 import {
   getCandles,
   getFigureLevels,
+  getNotifications,
   addFigureLevel,
   removeFigureLevel,
+  removeNotification,
 } from './ChartContainer.api';
+
+import AddNotificationModal from '../modals/AddNotification/AddNotification.modal';
 
 import { ECandleType } from '../../interfaces/candle-type.enum';
 import { EDrawingTool } from '../../interfaces/drawing-tool.enum';
 import { IInstrument } from '../../interfaces/instrument.interface';
 import { IFigureLevel } from '../../interfaces/figure-level.interface';
+import { INotification } from '../../interfaces/notification.interface';
 
 import styles from './ChartContainer.module.scss';
 
 const ChartContainer = () => {
   const {
     setActiveDrawingTool,
+    setActiveServiceTool,
     setFigureLevelList,
     setNotificationList,
     addFigureLevelToList,
-    addNotificationToList,
     removeFigureLevelFromList,
     removeNotificationFromList,
   } = useActions();
@@ -35,39 +40,50 @@ const ChartContainer = () => {
   const {
     activePeriod,
     figureLevelList,
+    notificationList,
     activeDrawingTool,
+    activeServiceTool,
   } = useAppSelector(state => state.tradingPage);
 
   const activeInstrument = useAppSelector(state => state.tradingPage.activeInstrument) as IInstrument;
 
-  // const addNotificaitonRef = useRef(null);
   const activeFigureLevelRef = useRef<IFigureLevel>();
+  const activeNotificationRef = useRef<INotification>();
   const figureLevelListRef = useRef<IFigureLevel[]>([]);
+  const notificationListRef = useRef<INotification[]>([]);
   const activeDrawingToolRef = useRef(activeDrawingTool); // todo: костыль
+  const activeServiceToolRef = useRef(activeServiceTool); // todo: костыль
 
   let baseChart = new BaseChartLib(activePeriod, activeInstrument);
   let volumeChart = new VolumeChartLib(activePeriod);
 
+  const [notificationPrice, setNotificationPrice] = useState(0);
   const [rulerData, setRulerData] = useState({ value: 0, x: -9999, y: 0 });
-  const [addNotificationData, setAddNotificationData] = useState({ x: 0, y: -9999 });
+  const [isAddNotificaitonModalShown, setIsAddNotificaitonModalShown] = useState(false);
   const [choosenCandle, setChoosenCandleData] = useState({ open: 0, close: 0, high: 0, low: 0, percent: 0 });
 
   // todo: invent decision for TopMenu.height
   const chartContainerHeight = window.innerHeight - 40;
 
-  const localRemoveFigureLevel = async () => {
-    if (!activeFigureLevelRef.current) {
-      return true;
-    }
-
+  const localRemoveFigureLevel = async (figureLevel: IFigureLevel) => {
     const resultRemove = await removeFigureLevel({
-      figureLevelId: activeFigureLevelRef.current.figure_level_id,
+      figureLevelId: figureLevel.figure_level_id,
     });
 
     if (resultRemove) {
-      baseChart.removeExtraSeries(activeFigureLevelRef.current.figure_level_id.toString());
-      removeFigureLevelFromList(activeFigureLevelRef.current);
-      activeFigureLevelRef.current = undefined;
+      baseChart.removeExtraSeries(figureLevel.figure_level_id.toString());
+      removeFigureLevelFromList(figureLevel);
+    }
+  };
+
+  const localRemoveNotification = async (notification: INotification) => {
+    const resultRemove = await removeNotification({
+      notificationId: notification.notification_id,
+    });
+
+    if (resultRemove) {
+      baseChart.removeExtraSeries(notification.notification_id.toString());
+      removeNotificationFromList(notification);
     }
   };
 
@@ -83,10 +99,23 @@ const ChartContainer = () => {
           return true;
         }
 
-        figureLevelOptions.draw(
-          figureLevel.timeframe,
-          figureLevel.figure_level_id.toString()
+        const color = baseChart.getColorForFigureLevel(figureLevel.timeframe);
+        figureLevelOptions.draw(color, figureLevel.figure_level_id.toString());
+      });
+    };
+
+    const drawNotifications = () => {
+      notificationListRef.current.forEach(notification => {
+        const notificationOptions = baseChart.addNotification(
+          notification.price,
+          new Date(baseChart.getStartTimeOfChart() * 1000),
         );
+
+        if (!notificationOptions) {
+          return true;
+        }
+
+        notificationOptions.draw('#1DB803', notification.notification_id.toString());
       });
     };
 
@@ -109,29 +138,39 @@ const ChartContainer = () => {
     baseChart.addCandles(candles);
     baseChart.drawInMainSeries();
     volumeChart.drawInMainSeries(baseChart.getCandles());
+    
+    const shortMovingAverage = baseChart.getMovingAverageInstance(20);
+    const mediumMovingAverage = baseChart.getMovingAverageInstance(50);
+    const longMovingAverage = baseChart.getMovingAverageInstance(200);
+
+    shortMovingAverage.drawInMainSeries(baseChart.getCandles());
+    mediumMovingAverage.drawInMainSeries(baseChart.getCandles());
+    longMovingAverage.drawInMainSeries(baseChart.getCandles());
 
     setTimeout(() => {
-      const priceScaleWidth = (baseChart.getPriceScaleWidth() || 0);
-      const difference = (volumeChart.getPriceScaleWidth() || 0) - priceScaleWidth;
+      const difference = (volumeChart.getPriceScaleWidth() || 0) - (baseChart.getPriceScaleWidth() || 0);
       volumeChart.updateChartOptions({ width: volumeChart.getChartWidth() + difference });
-
-      setAddNotificationData(prev => ({
-        x: window.innerWidth - priceScaleWidth - 20,
-        y: prev.y,
-      }));
     }, 100);
 
     drawFigureLevels();
+    drawNotifications();
 
     baseChart.subscribeClick(async params => {
       if (!params.point || !params.time) {
         return true;
       }
 
-      console.log('params.point', params.point);
+      const price = baseChart.coordinateToPrice(params.point.y);
+
+      if (activeServiceToolRef.current) {
+        setNotificationPrice(parseFloat(price.toFixed(activeInstrument.price_precision)));
+        setActiveServiceTool(false);
+        setIsAddNotificaitonModalShown(true);
+        return;
+      }
 
       let choosenFigureLevel: IFigureLevel | undefined = undefined;
-      const price = baseChart.coordinateToPrice(params.point.y);
+      let choosenNotification: INotification | undefined = undefined;
 
       const nearestLongFigureLevel = figureLevelListRef.current
         .filter(e => e.price >= price)
@@ -140,6 +179,14 @@ const ChartContainer = () => {
       const nearestShortFigureLevels = figureLevelListRef.current
         .filter(e => e.price < price)
         .sort((a, b) => a.price < b.price ? 1 : -1)[0];
+      
+      const nearestLongNotification = notificationListRef.current
+        .filter(e => e.price >= price)
+        .sort((a, b) => a.price > b.price ? 1 : -1)[0];
+
+      const nearestShortNotification = notificationListRef.current
+      .filter(e => e.price < price)
+      .sort((a, b) => a.price < b.price ? 1 : -1)[0];
 
       if (nearestLongFigureLevel && !nearestShortFigureLevels) {
         choosenFigureLevel = nearestLongFigureLevel;
@@ -152,8 +199,34 @@ const ChartContainer = () => {
           ? nearestLongFigureLevel : nearestShortFigureLevels;
       }
 
+      if (nearestLongNotification && !nearestShortNotification) {
+        choosenNotification = nearestLongNotification;
+      } else if (nearestShortNotification && !nearestLongNotification) {
+        choosenNotification = nearestShortNotification;
+      } else if (nearestLongNotification && nearestShortNotification) {
+        const difLong = Math.abs(nearestLongNotification.price - price);
+        const difShort = Math.abs(nearestShortNotification.price - price);
+        choosenNotification = difLong < difShort
+          ? nearestLongNotification : nearestShortNotification;
+      }
+
+      if (choosenFigureLevel && choosenNotification) {
+        const difFigureLevel = Math.abs(choosenFigureLevel.price - price);
+        const difNotification = Math.abs(choosenNotification.price - price);
+
+        if (difFigureLevel < difNotification) {
+          choosenNotification = undefined;
+          activeNotificationRef.current = undefined;
+        } else {
+          choosenFigureLevel = undefined;
+          activeFigureLevelRef.current = undefined;
+        }
+      }
+
       if (choosenFigureLevel) {
         activeFigureLevelRef.current = choosenFigureLevel;
+      } else if (choosenNotification) {
+        activeNotificationRef.current = choosenNotification;
       }
 
       if (activeDrawingToolRef.current === EDrawingTool.TradingLevel) {
@@ -176,10 +249,8 @@ const ChartContainer = () => {
         });
 
         if (result) {
-          figureLevelOptions.draw(
-            activePeriod,
-            result.figure_level_id.toString(),
-          );
+          const color = baseChart.getColorForFigureLevel(result.timeframe);
+          figureLevelOptions.draw(color, result.figure_level_id.toString());
 
           addFigureLevelToList(result);
           activeFigureLevelRef.current = result;
@@ -229,6 +300,10 @@ const ChartContainer = () => {
           });
 
           drawFigureLevels();
+
+          shortMovingAverage.drawInMainSeries(baseChart.getCandles());
+          mediumMovingAverage.drawInMainSeries(baseChart.getCandles());
+          longMovingAverage.drawInMainSeries(baseChart.getCandles());
         }
       });
     }
@@ -262,11 +337,6 @@ const ChartContainer = () => {
           x: param.point.x + 13,
           y: param.point.y - 32,
         });
-
-        setAddNotificationData(prev => ({
-          x: prev.x,
-          y: (param.point?.y || 0) - (20 / 2),
-        }));
       }
 
       if (param.point && param.time) {
@@ -292,7 +362,13 @@ const ChartContainer = () => {
       figureLevels && setFigureLevelList(figureLevels);
     }
 
+    const setNotificationsData = async () => {
+      const notifications = await getNotifications({ instrumentId: activeInstrument.instrument_id });
+      notifications && setNotificationList(notifications);
+    }
+
     setFigureLevelsData();
+    setNotificationsData();
   }, [activeInstrument]);
 
   useEffect(() => {
@@ -314,7 +390,17 @@ const ChartContainer = () => {
     const keyPressedHandler = async ({ key }: KeyboardEvent) => {
       switch (key) {
         case 'r': await localRenewChart(); break;
-        case 'Backspace': await localRemoveFigureLevel(); break;
+        case 'Backspace': {
+          if (activeFigureLevelRef.current) {
+            await localRemoveFigureLevel(activeFigureLevelRef.current);
+            activeFigureLevelRef.current = undefined;
+          } else if (activeNotificationRef.current) {
+            await localRemoveNotification(activeNotificationRef.current);
+            activeNotificationRef.current = undefined;
+          }
+
+          break;
+        }
         default: return true;
       }
     };
@@ -338,13 +424,28 @@ const ChartContainer = () => {
   }, [figureLevelList]);
 
   useEffect(() => {
+    notificationListRef.current = notificationList;
+  }, [notificationList]);
+
+  useEffect(() => {
     activeDrawingToolRef.current = activeDrawingTool;
   }, [activeDrawingTool]);
+
+  useEffect(() => {
+    activeServiceToolRef.current = activeServiceTool;
+  }, [activeServiceTool]);
 
   return <div
     className={join(styles.ChartContainer)}
     style={{ height: chartContainerHeight }}
   >
+    <AddNotificationModal
+      isShown={isAddNotificaitonModalShown}
+      notificationPrice={notificationPrice}
+      setIsShown={setIsAddNotificaitonModalShown}
+      setNotificationPrice={setNotificationPrice}
+    />
+
     <div className={join(styles.CandleData)}>
       <div>ОТКР<span>{choosenCandle.open}</span></div>
       <div>МАКС<span>{choosenCandle.high}</span></div>
@@ -365,15 +466,6 @@ const ChartContainer = () => {
             left: rulerData.x,
           }}
         >{rulerData.value}%</span>
-
-        <div
-          // ref={addNotificaitonRef}
-          className={join(styles.AddNotification)}
-          style={{
-            top: addNotificationData.y,
-            left: addNotificationData.x,
-          }}
-        ><span>+</span></div>
       </div>
 
       <div
